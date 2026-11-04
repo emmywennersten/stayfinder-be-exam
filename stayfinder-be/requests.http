@@ -230,13 +230,7 @@ Content-Type: application/json
   "guests": 3
 }
 
-### 32. Ändra status → 200
-PATCH {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
-Content-Type: application/json
-
-{
-  "status": "confirmed"
-}
+### Om VG - status på bokning
 
 ### 33. Flytta utcheckning till före incheckning → 400
 PATCH {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}

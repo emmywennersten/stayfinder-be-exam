@@ -13,6 +13,4 @@ export type NewBooking = Pick<
   "guest_name" | "guest_email" | "check_in" | "check_out" | "guests"
 >;
 
-export type BookingUpdate = Partial<NewBooking> & {
-  status?: BookingStatus;
-};
+export type BookingUpdate = Partial<NewBooking>;

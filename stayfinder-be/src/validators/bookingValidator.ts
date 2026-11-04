@@ -21,10 +21,7 @@ const bookingCreateSchema = z
   });
 
 const bookingUpdateSchema = z
-  .object({
-    ...bookingFields,
-    status: z.enum(["pending", "confirmed", "cancelled"], 'Status must be "pending", "confirmed" or "cancelled"'),
-  })
+  .object(bookingFields)
   .partial()
   .refine((body) => Object.keys(body).length > 0, "Send at least one field to update")
   .refine(

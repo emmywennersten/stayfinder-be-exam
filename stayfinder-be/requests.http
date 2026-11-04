@@ -1,0 +1,283 @@
+@baseUrl = http://localhost:3000
+
+########################################
+# AUTH
+########################################
+
+### 1. Registrera med ogiltig e-post och kort lösenord → 400
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "inte-en-mejl",
+  "password": "123"
+}
+
+### 2. Logga in med fel lösenord → 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "emmy@test.se",
+  "password": "fel123456"
+}
+
+### 3. Logga in → 200
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "emmy@test.se",
+  "password": "hemligt123"
+}
+
+### 4. Vem är inloggad → 200
+GET {{baseUrl}}/auth/me
+
+### 5. Logga ut → 200
+POST {{baseUrl}}/auth/logout
+
+### 6. Vem är inloggad efter utloggning → 401
+GET {{baseUrl}}/auth/me
+
+########################################
+# PROPERTIES – UTLOGGAD
+########################################
+
+### 7. Alla boenden → 200
+# @name listProperties
+GET {{baseUrl}}/properties
+
+### 8. Filter på plats → 200 (bara Stockholm)
+GET {{baseUrl}}/properties?location=stock
+
+### 9. Filter på maxpris och gäster → 200
+GET {{baseUrl}}/properties?max_price=900&guests=2
+
+### 10. Sortera på pris, stigande → 200
+GET {{baseUrl}}/properties?sort=price_asc
+
+### 11. Sortera på pris, fallande → 200
+GET {{baseUrl}}/properties?sort=price_desc
+
+### 12. Ogiltig sortering → 400
+GET {{baseUrl}}/properties?sort=random
+
+### 13. Ett boende → 200
+GET {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}
+
+### 14. Ogiltigt id → 400
+GET {{baseUrl}}/properties/123
+
+### 15. Giltigt id som inte finns → 404
+GET {{baseUrl}}/properties/00000000-0000-4000-8000-000000000000
+
+### 16. Skapa boende utan att vara inloggad → 401
+POST {{baseUrl}}/properties
+Content-Type: application/json
+
+{
+  "title": "Seaside Cottage",
+  "description": "Charming cottage steps from the beach.",
+  "location": "Visby, Sweden",
+  "price_per_night": 1100,
+  "max_guests": 5,
+  "kind": "villa"
+}
+
+########################################
+# PROPERTIES – INLOGGAD
+########################################
+
+### 17. Logga in → 200
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "emmy@test.se",
+  "password": "hemligt123"
+}
+
+### 18. Skapa boende → 201
+# @name createProperty
+POST {{baseUrl}}/properties
+Content-Type: application/json
+
+{
+  "title": "Seaside Cottage",
+  "description": "Charming cottage steps from the beach.",
+  "location": "Visby, Sweden",
+  "price_per_night": 1100,
+  "max_guests": 5,
+  "kind": "villa"
+}
+
+### 19. Skapa boende med ogiltig data → 400
+POST {{baseUrl}}/properties
+Content-Type: application/json
+
+{
+  "title": "A",
+  "description": "Test",
+  "location": "Visby",
+  "price_per_night": 0,
+  "max_guests": 2,
+  "kind": "hus"
+}
+
+### 20. Ändra pris → 200
+PATCH {{baseUrl}}/properties/{{createProperty.response.body.property_id}}
+Content-Type: application/json
+
+{
+  "price_per_night": 1000
+}
+
+### 21. Ändra utan några fält → 400
+PATCH {{baseUrl}}/properties/{{createProperty.response.body.property_id}}
+Content-Type: application/json
+
+{}
+
+### 22. Ta bort → 200
+DELETE {{baseUrl}}/properties/{{createProperty.response.body.property_id}}
+
+### 23. Ta bort igen → 404
+DELETE {{baseUrl}}/properties/{{createProperty.response.body.property_id}}
+
+########################################
+# BOOKINGS – INLOGGAD
+########################################
+
+### 24. Logga in → 200
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "emmy@test.se",
+  "password": "hemligt123"
+}
+
+### 25. Bokningar för ett boende → 200
+GET {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+
+### 26. Boka → 201 (status blir pending)
+# @name createBooking
+POST {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "anna@example.com",
+  "check_in": "2026-12-10",
+  "check_out": "2026-12-13",
+  "guests": 2
+}
+
+### 27. Ogiltig e-post → 400
+POST {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "inte-en-mejl",
+  "check_in": "2026-12-10",
+  "check_out": "2026-12-13",
+  "guests": 2
+}
+
+### 28. Noll gäster → 400
+POST {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "anna@example.com",
+  "check_in": "2026-12-10",
+  "check_out": "2026-12-13",
+  "guests": 0
+}
+
+### 29. Utcheckning före incheckning → 400
+POST {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "anna@example.com",
+  "check_in": "2026-12-13",
+  "check_out": "2026-12-10",
+  "guests": 2
+}
+
+### 30. Boka ett boende som inte finns → 404
+POST {{baseUrl}}/properties/00000000-0000-4000-8000-000000000000/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "anna@example.com",
+  "check_in": "2026-12-10",
+  "check_out": "2026-12-13",
+  "guests": 2
+}
+
+### 31. Ändra antal gäster → 200
+PATCH {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
+Content-Type: application/json
+
+{
+  "guests": 3
+}
+
+### 32. Ändra status → 200
+PATCH {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
+Content-Type: application/json
+
+{
+  "status": "confirmed"
+}
+
+### 33. Flytta utcheckning till före incheckning → 400
+PATCH {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
+Content-Type: application/json
+
+{
+  "check_out": "2026-12-01"
+}
+
+### 34. Ogiltigt boknings-id → 400
+PATCH {{baseUrl}}/bookings/123
+Content-Type: application/json
+
+{
+  "guests": 3
+}
+
+### 35. Ta bort bokning → 200
+DELETE {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
+
+### 36. Ta bort igen → 404
+DELETE {{baseUrl}}/bookings/{{createBooking.response.body.booking_id}}
+
+########################################
+# BOOKINGS – UTLOGGAD
+########################################
+
+### 37. Logga ut → 200
+POST {{baseUrl}}/auth/logout
+
+### 38. Se bokningar utloggad → 401
+GET {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+
+### 39. Boka utloggad → 401
+POST {{baseUrl}}/properties/{{listProperties.response.body.$[0].property_id}}/bookings
+Content-Type: application/json
+
+{
+  "guest_name": "Anna Karlsson",
+  "guest_email": "anna@example.com",
+  "check_in": "2026-12-10",
+  "check_out": "2026-12-13",
+  "guests": 2
+}

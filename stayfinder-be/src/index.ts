@@ -5,6 +5,9 @@ import { cors } from "hono/cors";
 import { env } from "./env.js";
 import { optionalAuth } from "./middleware/auth.js";
 import auth from "./routes/auth.js";
+import properties from "./routes/properties.js";
+import bookings from "./routes/bookings.js";
+
 
 const app = new Hono({ strict: false });
 
@@ -25,6 +28,10 @@ app.get("/", (c) => {
 });
 
 app.route("/auth", auth);
+
+app.route("/properties", properties);
+
+app.route("/", bookings);
 
 serve({ fetch: app.fetch, port: env.port }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`);
